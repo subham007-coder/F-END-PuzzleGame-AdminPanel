@@ -18,10 +18,7 @@ const Dashboard = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      console.log('Attempting to delete song with ID:', songToDelete._id);
-      
-      const response = await axios.delete(`http://localhost:5000/api/songs/${songToDelete._id}`);
-      console.log('Delete response:', response);
+      const response = await axios.delete(`https://puzzle-game-backend-a7gf.onrender.com/api/songs/${songToDelete._id}`);
       
       if (response.status === 200) {
         setRecentSongs(prevSongs => prevSongs.filter(song => song._id !== songToDelete._id));
@@ -41,20 +38,12 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch recent songs
-        const songsResponse = await axios.get("http://localhost:5000/api/songs");
+        const songsResponse = await axios.get("https://puzzle-game-backend-a7gf.onrender.com/api/songs");
         setRecentSongs(songsResponse.data);
-
-        // Fetch top albums
-        // const albumsResponse = await axios.get(
-        //   "http://localhost:5000/api/songs"
-        // );
-        // setTopAlbums(albumsResponse.data);
-
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
+        toast.error('Failed to fetch songs. Please try again later.');
         setLoading(false);
       }
     };
@@ -130,7 +119,7 @@ const Dashboard = () => {
                         className="flex items-center space-x-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition duration-150"
                       >
                         <img
-                          src={`http://localhost:5000/${song.image}`}
+                          src={`https://puzzle-game-backend-a7gf.onrender.com/${song.image}`}
                           alt={song.title}
                           className="w-16 h-16 rounded-md object-cover"
                         />
