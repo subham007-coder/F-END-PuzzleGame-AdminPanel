@@ -36,7 +36,7 @@ function AdminPanel() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/songs/add",
+        "https://puzzle-game-backend-a7gf.onrender.com/api/songs/add",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
