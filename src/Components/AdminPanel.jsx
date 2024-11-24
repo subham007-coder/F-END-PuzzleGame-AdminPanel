@@ -27,6 +27,8 @@ function AdminPanel() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const formData = new FormData();
     formData.append("title", songData.title);
@@ -34,12 +36,14 @@ function AdminPanel() {
     if (image) formData.append("image", image);
     if (audio) formData.append("audio", audio);
 
+    setIsSubmitting(true);
     try {
       const response = await axios.post(
         "https://puzzle-game-backend-a7gf.onrender.com/api/songs/add",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
+          timeout: 10000,
         }
       );
       toast.success('Song added successfully');
@@ -48,7 +52,19 @@ function AdminPanel() {
       setAudio(null);
     } catch (error) {
       console.error("Error adding song:", error);
-      toast.error('Failed to add song');
+      let errorMessage = 'Failed to add song';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Request timed out. Please try again.';
+      } else if (error.response) {
+        errorMessage = `Server error: ${error.response.status}`;
+      } else if (error.request) {
+        errorMessage = 'Cannot connect to server. Please check your connection.';
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -145,9 +161,12 @@ function AdminPanel() {
           <div className="flex justify-center">
             <button
               type="submit"
-              className="bg-sky-600 hover:bg-sky-700 text-white py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              disabled={isSubmitting}
+              className={`bg-sky-600 hover:bg-sky-700 text-white py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Add Song
+              {isSubmitting ? 'Adding Song...' : 'Add Song'}
             </button>
           </div>
         </form>
