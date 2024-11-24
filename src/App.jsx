@@ -7,7 +7,7 @@ import Dashboard from "./Components/DashBorad";
 function App() {
   return (
     <Router>
-      <div className="flex">
+      <div className="flex bg-gray-900 w-full h-screen">
         <Navbar />
         <main className="flex-1">
           <Routes>
@@ -15,7 +15,6 @@ function App() {
             <Route path="/new-project" element={<AdminPanel />} />
             {/* Add more routes as needed */}
           </Routes>
-        <Dashboard/>
         </main>
       </div>
     </Router>
