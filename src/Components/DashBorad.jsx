@@ -4,8 +4,6 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://puzzle-game-backend-a7gf.onrender.com';
-
 const Dashboard = () => {
   const [recentSongs, setRecentSongs] = useState([]);
   // const [topAlbums, setTopAlbums] = useState([]);
@@ -40,7 +38,7 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const songsResponse = await axios.get(`${API_URL}/api/songs`);
+        const songsResponse = await axios.get("https://puzzle-game-backend-a7gf.onrender.com/api/songs");
         setRecentSongs(songsResponse.data);
         setLoading(false);
       } catch (error) {

@@ -15,6 +15,7 @@ function App() {
             <Route path="/new-project" element={<AdminPanel />} />
             {/* Add more routes as needed */}
           </Routes>
+        <Dashboard/>
         </main>
       </div>
     </Router>
