@@ -25,30 +25,47 @@ function AdminPanel() {
     setAudio(e.target.files[0]);
   };
 
+  // Change the API URL to localhost
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    // Validate files
+    if (!image || !audio) {
+      toast.error('Both image and audio files are required');
+      return;
+    }
+  
     const formData = new FormData();
     formData.append("title", songData.title);
     formData.append("album", songData.album);
-    if (image) formData.append("image", image);
-    if (audio) formData.append("audio", audio);
-
+    formData.append("image", image);
+    formData.append("audio", audio);
+  
     try {
       const response = await axios.post(
-        "https://puzzle-game-backend-a7gf.onrender.com/api/songs/add",
+        "http://localhost:5000/api/songs/add",
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 
+            "Content-Type": "multipart/form-data"
+          },
+          withCredentials: true
         }
       );
-      toast.success('Song added successfully');
-      setSongData({ title: "", album: "" });
-      setImage(null);
-      setAudio(null);
+      
+      if (response.data) {
+        toast.success('Song added successfully');
+        setSongData({ title: "", album: "" });
+        setImage(null);
+        setAudio(null);
+        
+        // Reset file inputs
+        document.getElementById('image-upload').value = '';
+        document.getElementById('audio-upload').value = '';
+      }
     } catch (error) {
       console.error("Error adding song:", error);
-      toast.error('Failed to add song');
+      toast.error(error.response?.data?.message || 'Failed to add song');
     }
   };
 
@@ -110,6 +127,7 @@ function AdminPanel() {
             <input
               type="file"
               id="image-upload"
+              name="image"  // Make sure this matches
               required
               onChange={handleFileChange}
               accept="image/*"
@@ -132,6 +150,7 @@ function AdminPanel() {
               type="file"
               id="audio-upload"
               required
+              name="audio"  // Make sure this matches
               onChange={handleAudioChange}
               accept="audio/*"
               className="w-full text-white bg-slate-700 p-3 rounded-md file:bg-slate-600 file:text-white file:px-4 file:py-2 file:rounded-md focus:outline-none"

@@ -6,8 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const Dashboard = () => {
   const [recentSongs, setRecentSongs] = useState([]);
-  // const [topAlbums, setTopAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [albums, setAlbums] = useState([]); // Add this state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [songToDelete, setSongToDelete] = useState(null);
 
@@ -18,10 +18,15 @@ const Dashboard = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      const response = await axios.delete(`https://puzzle-game-backend-a7gf.onrender.com/api/songs/${songToDelete._id}`);
-      
+      const response = await axios.delete(
+        `http://localhost:5000/api/songs/${songToDelete._id}`,
+        { withCredentials: true }
+      );
+
       if (response.status === 200) {
-        setRecentSongs(prevSongs => prevSongs.filter(song => song._id !== songToDelete._id));
+        setRecentSongs(prevSongs =>
+          prevSongs.filter(song => song._id !== songToDelete._id)
+        );
         toast.success('Song deleted successfully');
       }
     } catch (error) {
@@ -38,18 +43,39 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const songsResponse = await axios.get("https://puzzle-game-backend-a7gf.onrender.com/api/songs");
+        const songsResponse = await axios.get("http://localhost:5000/api/songs", {
+          withCredentials: true
+        });
         setRecentSongs(songsResponse.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error('Failed to fetch songs. Please try again later.');
+        toast.error('Failed to fetch songs');
         setLoading(false);
       }
     };
 
     fetchData();
   }, []);
+
+
+  useEffect(() => {
+    if (recentSongs.length > 0) {
+      const albumMap = recentSongs.reduce((acc, song) => {
+        if (!acc[song.album]) {
+          acc[song.album] = {
+            name: song.album,
+            image: song.image,
+            songs: []
+          };
+        }
+        acc[song.album].songs.push(song);
+        return acc;
+      }, {});
+      setAlbums(Object.values(albumMap));
+    }
+  }, [recentSongs]);
+
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 ml-0">
@@ -96,7 +122,7 @@ const Dashboard = () => {
           </div>
           <div className="bg-pink-500 rounded-xl p-6 text-white">
             <h3 className="text-lg font-semibold mb-2">Total Cards</h3>
-            <p className="text-3xl font-bold">{recentSongs.length*2}</p>
+            <p className="text-3xl font-bold">{recentSongs.length * 2}</p>
           </div>
         </div>
 
@@ -119,7 +145,7 @@ const Dashboard = () => {
                         className="flex items-center space-x-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition duration-150"
                       >
                         <img
-                          src={`https://puzzle-game-backend-a7gf.onrender.com/${song.image}`}
+                          src={song.image}
                           alt={song.title}
                           className="w-16 h-16 rounded-md object-cover"
                         />
@@ -134,7 +160,7 @@ const Dashboard = () => {
                               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                             </svg>
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteClick(song)}
                             className="text-red-500 hover:text-red-700"
                           >
@@ -152,17 +178,17 @@ const Dashboard = () => {
           </div>
 
           {/* Top Albums */}
-          {/* <div>
+          <div>
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md">
               <div className="p-6">
                 <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
                   Top Albums
                 </h2>
                 {loading ? (
-                  <p>Loading albums...</p>
+                  <p className="dark:text-white">Loading albums...</p>
                 ) : (
                   <div className="grid gap-4">
-                    {topAlbums.map((album, index) => (
+                    {albums.map((album, index) => (
                       <div
                         key={index}
                         className="group relative overflow-hidden rounded-lg"
@@ -171,17 +197,26 @@ const Dashboard = () => {
                           src={album.image}
                           alt={album.name}
                           className="w-full h-48 object-cover"
+                          onError={(e) => {
+                            e.target.src = '/placeholder-image.jpg';
+                            e.target.onerror = null;
+                          }}
                         />
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                           <h3 className="text-white font-semibold">
                             {album.name}
                           </h3>
-                          <p className="text-gray-300 text-sm">
-                            {album.artist}
-                          </p>
-                          <p className="text-gray-400 text-xs">
-                            {album.songs} songs
-                          </p>
+                          {/* Expandable song list */}
+                          <div className="overflow-hidden transition-all duration-300 max-h-0 group-hover:max-h-32">
+                            <div className="pt-2 space-y-1">
+                              {album.songs.map((song, idx) => (
+                                <div key={idx} className="flex items-center text-gray-300 text-xs">
+                                  <span className="w-4">{idx + 1}.</span>
+                                  <p className="truncate flex-1">{song.title}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -189,9 +224,8 @@ const Dashboard = () => {
                 )}
               </div>
             </div>
-          </div> */}
+          </div>
 
-          
         </div>
       </div>
 
