@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import config from "../../config";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+// Font Awesome
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+
 
 const Dashboard = () => {
   const [recentSongs, setRecentSongs] = useState([]);
@@ -11,19 +17,38 @@ const Dashboard = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [songToDelete, setSongToDelete] = useState(null);
 
+  const [deleteProgress, setDeleteProgress] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDeleteClick = (song) => {
     setSongToDelete(song);
     setIsDeleteModalOpen(true);
   };
 
+  // Update handleDeleteConfirm
   const handleDeleteConfirm = async () => {
     try {
+      setIsDeleting(true);
+      setDeleteProgress(0);
+
+      // Simulate progress since delete operation is usually quick
+      const progressInterval = setInterval(() => {
+        setDeleteProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 100);
+
       const response = await axios.delete(
-        `http://localhost:5000/api/songs/${songToDelete._id}`,
+        `${config.API_URL}/songs/${songToDelete._id}`,
         { withCredentials: true }
       );
 
       if (response.status === 200) {
+        setDeleteProgress(100);
         setRecentSongs(prevSongs =>
           prevSongs.filter(song => song._id !== songToDelete._id)
         );
@@ -33,17 +58,19 @@ const Dashboard = () => {
       console.error('Error deleting song:', error);
       toast.error('Failed to delete song');
     } finally {
+      setIsDeleting(false);
+      setDeleteProgress(0);
       setIsDeleteModalOpen(false);
       setSongToDelete(null);
     }
   };
 
-  // Fetch data from the backend
+  // Update useEffect for fetching data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const songsResponse = await axios.get("http://localhost:5000/api/songs", {
+        const songsResponse = await axios.get(`${config.API_URL}/songs`, {
           withCredentials: true
         });
         setRecentSongs(songsResponse.data);
@@ -156,18 +183,15 @@ const Dashboard = () => {
                         </div>
                         <div className="flex space-x-3">
                           <button className="text-blue-500 hover:text-blue-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
+                            <FontAwesomeIcon icon={faEdit} />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(song)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-white hover:text-zinc-400"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
+                            <FontAwesomeIcon icon={faTrash} />
                           </button>
+
                         </div>
                       </div>
                     ))}
@@ -230,13 +254,19 @@ const Dashboard = () => {
       </div>
 
       {/* Add the DeleteConfirmationModal */}
+
+
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
-          setIsDeleteModalOpen(false);
-          setSongToDelete(null);
+          if (!isDeleting) {
+            setIsDeleteModalOpen(false);
+            setSongToDelete(null);
+          }
         }}
         onConfirm={handleDeleteConfirm}
+        isDeleting={isDeleting}
+        progress={deleteProgress}
       />
       <ToastContainer position="bottom-right" />
     </div>

@@ -3,6 +3,8 @@ import axios from "axios";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import config from "../../config";
+
 
 function AdminPanel() {
   const [songData, setSongData] = useState({
@@ -10,8 +12,10 @@ function AdminPanel() {
     album: "",
   });
   const [image, setImage] = useState(null);
-
   const [audio, setAudio] = useState(null);
+
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleChange = (e) => {
     setSongData({ ...songData, [e.target.name]: e.target.value });
@@ -28,44 +32,73 @@ function AdminPanel() {
   // Change the API URL to localhost
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Validate files
     if (!image || !audio) {
       toast.error('Both image and audio files are required');
       return;
     }
-  
+
     const formData = new FormData();
     formData.append("title", songData.title);
     formData.append("album", songData.album);
     formData.append("image", image);
     formData.append("audio", audio);
-  
+
     try {
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 100);
+
       const response = await axios.post(
-        "http://localhost:5000/api/songs/add",
+        `${config.API_URL}/songs/add`,
         formData,
         {
-          headers: { 
+          headers: {
             "Content-Type": "multipart/form-data"
           },
-          withCredentials: true
+          withCredentials: true,
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(percentCompleted);
+          }
         }
       );
-      
+
       if (response.data) {
+        setUploadProgress(100); // Set to 100% when complete
         toast.success('Song added successfully');
-        setSongData({ title: "", album: "" });
-        setImage(null);
-        setAudio(null);
-        
-        // Reset file inputs
-        document.getElementById('image-upload').value = '';
-        document.getElementById('audio-upload').value = '';
+
+        // Reset form after a short delay
+        setTimeout(() => {
+          setSongData({ title: "", album: "" });
+          setImage(null);
+          setAudio(null);
+          setIsUploading(false);
+          setUploadProgress(0);
+
+          // Reset file inputs
+          document.getElementById('image-upload').value = '';
+          document.getElementById('audio-upload').value = '';
+        }, 500); // Half second delay to show 100%
       }
     } catch (error) {
       console.error("Error adding song:", error);
       toast.error(error.response?.data?.message || 'Failed to add song');
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -160,15 +193,36 @@ function AdminPanel() {
             </p>
           </div>
 
+
+          {/* Progress Bar */}
+          {isUploading && (
+            <div className="mb-4">
+              <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div
+                  className="bg-sky-600 h-2.5 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-center text-gray-400 mt-2">
+                Uploading... {uploadProgress}%
+              </p>
+            </div>
+          )}
+
           {/* Submit Button */}
           <div className="flex justify-center">
             <button
               type="submit"
-              className="bg-sky-600 hover:bg-sky-700 text-white py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              disabled={isUploading}
+              className={`${isUploading
+                  ? 'bg-gray-500 cursor-not-allowed'
+                  : 'bg-sky-600 hover:bg-sky-700'
+                } text-white py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200`}
             >
-              Add Song
+              {isUploading ? 'Uploading...' : 'Add Song'}
             </button>
           </div>
+
         </form>
       </div>
       <ToastContainer position="bottom-right" />

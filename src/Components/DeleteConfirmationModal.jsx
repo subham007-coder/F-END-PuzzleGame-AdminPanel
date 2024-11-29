@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isDeleting, progress }) => {
   if (!isOpen) return null;
 
   return (
@@ -12,18 +12,44 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
         <p className="mb-6 text-gray-600 dark:text-gray-300">
           Are you sure you want to delete this song? This action cannot be undone.
         </p>
-        <div className="flex justify-end space-x-4">
+
+         {/* Progress Bar */}
+         {isDeleting && (
+          <div className="mb-4">
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2 dark:bg-gray-700">
+              <div
+                className="bg-red-600 h-2.5 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+              Deleting... {progress}%
+            </p>
+          </div>
+        )}
+
+<div className="flex justify-end space-x-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+            disabled={isDeleting}
+            className={`px-4 py-2 rounded-md ${
+              isDeleting
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-gray-200 hover:bg-gray-300'
+            } text-gray-800`}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            disabled={isDeleting}
+            className={`px-4 py-2 rounded-md ${
+              isDeleting
+                ? 'bg-gray-500 cursor-not-allowed'
+                : 'bg-red-500 hover:bg-red-600'
+            } text-white`}
           >
-            Delete
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       </div>
@@ -31,4 +57,4 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
-export default DeleteConfirmationModal; 
+export default DeleteConfirmationModal;
