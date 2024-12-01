@@ -268,7 +268,7 @@ const Dashboard = () => {
         isDeleting={isDeleting}
         progress={deleteProgress}
       />
-      <ToastContainer position="bottom-right" />
+      <ToastContainer position="top-right" />
     </div>
   );
 };

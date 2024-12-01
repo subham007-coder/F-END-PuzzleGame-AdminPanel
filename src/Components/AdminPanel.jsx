@@ -225,7 +225,7 @@ function AdminPanel() {
 
         </form>
       </div>
-      <ToastContainer position="bottom-right" />
+      <ToastContainer position="top-right" />
     </div>
   );
 }
