@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { AiOutlinePlus, AiOutlineProject, AiOutlineDashboard } from "react-icons/ai";
-import { BsListTask, BsClock, BsPeople, BsGear } from "react-icons/bs";
+import { BsClock, BsGear } from "react-icons/bs";
 import { HiMenuAlt2, HiMenuAlt3 } from "react-icons/hi"; // Import menu icons
 
 function Navbar() {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <>
