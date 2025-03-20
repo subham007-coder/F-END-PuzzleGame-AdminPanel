@@ -1,11 +1,18 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { AiOutlinePlus, AiOutlineProject, AiOutlineDashboard } from "react-icons/ai";
 import { BsClock, BsGear } from "react-icons/bs";
 import { HiMenuAlt2, HiMenuAlt3 } from "react-icons/hi"; // Import menu icons
 
 function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    navigate('/login');
+  };
 
   return (
     <>
@@ -41,7 +48,7 @@ function Navbar() {
           <div className="flex flex-col space-y-4">
             <Link 
               to="/dashboard" 
-              className={`flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'} text-white hover:text-orange-500 px-4 py-2`}
+              className={`flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'} text-white hover:text-orange-500 px-4 py-2 ${location.pathname === '/dashboard' ? 'bg-gray-700' : ''}`}
             >
               <AiOutlineDashboard className="text-2xl" />
               {isExpanded && <span>Dashboard</span>}
@@ -70,6 +77,21 @@ function Navbar() {
               <BsGear className="text-2xl" />
               {isExpanded && <span>Menu settings</span>}
             </Link>
+
+            <Link 
+              to="/add-song" 
+              className={`flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'} text-white hover:text-orange-500 px-4 py-2 ${location.pathname === '/add-song' ? 'bg-gray-700' : ''}`}
+            >
+              <AiOutlinePlus className="text-2xl" />
+              {isExpanded && <span>Add New Song</span>}
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center text-white hover:text-orange-500 px-4 py-2"
+            >
+              {isExpanded && <span>Logout</span>}
+            </button>
           </div>
         </div>
       </nav>

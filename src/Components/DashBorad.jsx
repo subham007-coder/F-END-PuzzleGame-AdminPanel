@@ -31,7 +31,14 @@ const Dashboard = () => {
       setIsDeleting(true);
       setDeleteProgress(0);
 
-      // Simulate progress since delete operation is usually quick
+      // Get admin token from localStorage
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        toast.error('Please login again');
+        return;
+      }
+
+      // Simulate progress
       const progressInterval = setInterval(() => {
         setDeleteProgress(prev => {
           if (prev >= 90) {
@@ -44,7 +51,12 @@ const Dashboard = () => {
 
       const response = await axios.delete(
         `${config.API_URL}/songs/${songToDelete._id}`,
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${token}` // Add the token to headers
+          },
+          withCredentials: true
+        }
       );
 
       if (response.status === 200) {
@@ -56,7 +68,13 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error deleting song:', error);
-      toast.error('Failed to delete song');
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        // Optionally redirect to login
+        window.location.href = '/login';
+      } else {
+        toast.error('Failed to delete song');
+      }
     } finally {
       setIsDeleting(false);
       setDeleteProgress(0);
@@ -70,18 +88,37 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const songsResponse = await axios.get(`${config.API_URL}/songs`, {
-          withCredentials: true
-        });
+        const token = localStorage.getItem('adminToken');
+        
+        if (!token) {
+          toast.error('Please login again');
+          window.location.href = '/login';
+          return;
+        }
+  
+        const songsResponse = await axios.get(
+          `${config.API_URL}/songs`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            withCredentials: true
+          }
+        );
         setRecentSongs(songsResponse.data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error('Failed to fetch songs');
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again');
+          window.location.href = '/login';
+        } else {
+          toast.error('Failed to fetch songs');
+        }
+      } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
 
@@ -92,7 +129,7 @@ const Dashboard = () => {
         if (!acc[song.album]) {
           acc[song.album] = {
             name: song.album,
-            image: song.image,
+            imageUrl: song.imageUrl,
             songs: []
           };
         }
@@ -147,10 +184,10 @@ const Dashboard = () => {
             <h3 className="text-lg font-semibold mb-2">Albums</h3>
             <p className="text-3xl font-bold">{recentSongs.length}</p>
           </div>
-          <div className="bg-pink-500 rounded-xl p-6 text-white">
+          {/* <div className="bg-pink-500 rounded-xl p-6 text-white">
             <h3 className="text-lg font-semibold mb-2">Total Cards</h3>
             <p className="text-3xl font-bold">{recentSongs.length * 2}</p>
-          </div>
+          </div> */}
         </div>
 
         {/* Main Content Grid */}
@@ -172,9 +209,13 @@ const Dashboard = () => {
                         className="flex items-center space-x-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition duration-150"
                       >
                         <img
-                          src={song.image}
+                          src={song.imageUrl}
                           alt={song.title}
                           className="w-16 h-16 rounded-md object-cover"
+                          onError={(e) => {
+                            e.target.src = '/placeholder-image.jpg'; // Fallback image
+                            e.target.onerror = null;
+                          }}
                         />
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-800 dark:text-white">
@@ -218,7 +259,7 @@ const Dashboard = () => {
                         className="group relative overflow-hidden rounded-lg"
                       >
                         <img
-                          src={album.image}
+                          src={album.imageUrl}
                           alt={album.name}
                           className="w-full h-48 object-cover"
                           onError={(e) => {

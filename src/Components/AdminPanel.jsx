@@ -9,7 +9,10 @@ import config from "../../config";
 function AdminPanel() {
   const [songData, setSongData] = useState({
     title: "",
+    artist: "",
     album: "",
+    category: "",
+    language: ""
   });
   const [image, setImage] = useState(null);
   const [audio, setAudio] = useState(null);
@@ -33,21 +36,32 @@ function AdminPanel() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate files
-    if (!image || !audio) {
-      toast.error('Both image and audio files are required');
+    // Validate all fields
+    if (!image || !audio || !songData.title || !songData.artist || 
+        !songData.album || !songData.category || !songData.language) {
+      toast.error('All fields are required');
       return;
     }
 
     const formData = new FormData();
     formData.append("title", songData.title);
+    formData.append("artist", songData.artist);
     formData.append("album", songData.album);
+    formData.append("category", songData.category);
+    formData.append("language", songData.language);
     formData.append("image", image);
     formData.append("audio", audio);
 
     try {
       setIsUploading(true);
       setUploadProgress(0);
+
+      // Get admin token from localStorage
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        toast.error('Please login again');
+        return;
+      }
 
       // Simulate progress
       const progressInterval = setInterval(() => {
@@ -65,7 +79,8 @@ function AdminPanel() {
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data"
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}` // Add token to headers
           },
           withCredentials: true,
           onUploadProgress: (progressEvent) => {
@@ -83,7 +98,7 @@ function AdminPanel() {
 
         // Reset form after a short delay
         setTimeout(() => {
-          setSongData({ title: "", album: "" });
+          setSongData({ title: "", artist: "", album: "", category: "", language: "" });
           setImage(null);
           setAudio(null);
           setIsUploading(false);
@@ -96,7 +111,13 @@ function AdminPanel() {
       }
     } catch (error) {
       console.error("Error adding song:", error);
-      toast.error(error.response?.data?.message || 'Failed to add song');
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+        // Optional: Redirect to login
+        window.location.href = '/login';
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to add song');
+      }
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -124,17 +145,17 @@ function AdminPanel() {
           </div>
 
           {/* Artist */}
-          {/* <div>
-        <input
-          type="text"
-          name="artist"
-          value={songData.artist}
-          onChange={handleChange}
-          placeholder="Artist"
-          required
-          className="w-full p-3 bg-slate-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-        />
-      </div> */}
+          <div>
+            <input
+              type="text"
+              name="artist"
+              value={songData.artist}
+              onChange={handleChange}
+              placeholder="Artist Name"
+              required
+              className="w-full p-3 bg-slate-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+          </div>
 
           {/* Album */}
           <div>
@@ -144,7 +165,33 @@ function AdminPanel() {
               value={songData.album}
               onChange={handleChange}
               required
-              placeholder="Album"
+              placeholder="Album Name"
+              className="w-full p-3 bg-slate-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <input
+              type="text"
+              name="category"
+              value={songData.category}
+              onChange={handleChange}
+              placeholder="Category"
+              required
+              className="w-full p-3 bg-slate-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+          </div>
+
+          {/* Language */}
+          <div>
+            <input
+              type="text"
+              name="language"
+              value={songData.language}
+              onChange={handleChange}
+              placeholder="Language"
+              required
               className="w-full p-3 bg-slate-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
