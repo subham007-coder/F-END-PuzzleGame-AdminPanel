@@ -1,6 +1,6 @@
 const config = {
     API_URL: import.meta.env.PROD
-        ? 'https://puzzle-game-backend-a7gf.onrender.com/api'
+        ? 'https://full-stack-music-backend.onrender.com/api'
         : 'http://localhost:5000/api'
 };
 
