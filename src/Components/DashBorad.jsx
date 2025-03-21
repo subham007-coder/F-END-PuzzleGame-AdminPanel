@@ -96,7 +96,7 @@ const Dashboard = () => {
           return;
         }
   
-        console.log('API URL:', config.API_URL); // Debug line
+        // console.log('API URL:', config.API_URL); // Debug line
         
         const songsResponse = await axios.get(
           `${config.API_URL}/songs`,
