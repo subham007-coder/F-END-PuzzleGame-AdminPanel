@@ -96,6 +96,8 @@ const Dashboard = () => {
           return;
         }
   
+        console.log('API URL:', config.API_URL); // Debug line
+        
         const songsResponse = await axios.get(
           `${config.API_URL}/songs`,
           {
@@ -108,7 +110,9 @@ const Dashboard = () => {
         setRecentSongs(songsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
-        if (error.response?.status === 401) {
+        if (error.message === 'Network Error') {
+          toast.error('Cannot connect to server. Please check your connection.');
+        } else if (error.response?.status === 401) {
           toast.error('Session expired. Please login again');
           window.location.href = '/login';
         } else {
